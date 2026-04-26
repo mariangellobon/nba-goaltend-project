@@ -1,2 +1,8 @@
-# Editable install (uses pyproject.toml). For notebooks: pip install -e ".[notebooks]"
+# Original SportsTech_NBA scripts
+opencv-python
+numpy
+matplotlib
+pandas
+
+# Goaltend close-call package (see pyproject.toml); includes notebook extras
 -e .[notebooks]

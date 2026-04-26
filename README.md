@@ -1,6 +1,6 @@
-# Goaltend close-call — backboard accelerometer analysis
+# SportsTech_NBA — goaltend / backboard accelerometer
 
-Python tools to load tri-axial backboard accelerometer CSVs, extract **scale-aware** features (direction-change spectrograms and optional time-domain shape features), and train **goaltend vs legal** classifiers. Includes a pipeline for **marginal “close call”** trials held out from segmented training data.
+This repo includes **SportsTech_NBA** work plus a **goaltend close-call** track: Python tools to load tri-axial backboard accelerometer CSVs, extract **scale-aware** features (direction-change spectrograms and optional time-domain shape features), and train **goaltend vs legal** classifiers, with a pipeline for marginal **close call** trials.
 
 ## Repository layout
 
@@ -10,6 +10,7 @@ Python tools to load tri-axial backboard accelerometer CSVs, extract **scale-awa
 | `data/` | Segmented class folders, `Close Calls/`, and `close_calls_labels.csv` |
 | `notebooks/` | Exploratory analysis (e.g. spectrograms, PCA) |
 | `outputs/` | Generated prediction CSVs (gitignored except `.gitkeep`) |
+| `code.py`, `code2.py`, … | Other SportsTech_NBA scripts (from upstream `main`) |
 
 ## Setup
 
@@ -17,18 +18,18 @@ Python tools to load tri-axial backboard accelerometer CSVs, extract **scale-awa
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 python -m pip install -U pip setuptools wheel
-pip install -e ".[notebooks]"   # omit [notebooks] if you only run models
+pip install -r requirements.txt
 ```
 
-If you prefer not to install the package, you can run with `PYTHONPATH=src`:
+If you prefer not to install the goaltend package in editable mode, you can run models with:
 
 ```bash
 PYTHONPATH=src python -m goaltend_close_call.close_call_model
 ```
 
-## Run models
+## Run goaltend models
 
-From the **repository root** (parent of `src/`):
+From the **repository root**:
 
 ```bash
 python -m goaltend_close_call.close_call_model
@@ -36,7 +37,7 @@ python -m goaltend_close_call.close_call_shape_model
 python -m goaltend_close_call.sensor_io   # smoke test: loads sample CSVs from data/
 ```
 
-Predictions are written to `outputs/close_calls_predictions.csv` and `outputs/close_calls_shape_predictions.csv`.
+Predictions: `outputs/close_calls_predictions.csv`, `outputs/close_calls_shape_predictions.csv`.
 
 ### Environment variables
 
