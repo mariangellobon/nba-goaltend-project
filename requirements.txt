@@ -1,0 +1,2 @@
+# Editable install (uses pyproject.toml). For notebooks: pip install -e ".[notebooks]"
+-e .[notebooks]

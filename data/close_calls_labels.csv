@@ -1,0 +1,12 @@
+filename,ground_truth
+close_calls_1.csv,legal
+close_calls_2.csv,legal
+close_calls_3.csv,legal
+close_calls_4.csv,cant_tell
+close_calls_5.csv,cant_tell
+close_calls_6.csv,goaltend
+close_calls_7.csv,goaltend
+close_calls_8.csv,goaltend
+close_calls_9.csv,legal
+close_calls_10.csv,legal
+close_calls_11.csv,legal
