@@ -1,0 +1,8 @@
+# Original SportsTech_NBA scripts
+opencv-python
+numpy
+matplotlib
+pandas
+
+# Goaltend close-call package (see pyproject.toml); includes notebook extras
+-e .[notebooks]

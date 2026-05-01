@@ -1,17 +1,30 @@
-# Large local workspace: only Python under syncing_video_data/ is intended for GitHub.
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+src/*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
 
-# Ignore everything at repository root except this file and the syncing code folder.
-/*
-!.gitignore
-!syncing_video_data/
+# Virtual environments
+.venv/
+venv/
+.env
 
-# Under syncing_video_data: ignore all files, then allow only our Python sources.
-/syncing_video_data/**
-!/syncing_video_data/**/
-!/syncing_video_data/**/*.py
+# Jupyter
+.ipynb_checkpoints/
 
-# Never track virtualenvs (they contain thousands of third-party .py files).
-/syncing_video_data/venv/
-/syncing_video_data/.venv/
+# OS / editor
+.DS_Store
+.mplconfig/
 
-**/.DS_Store
+# Generated outputs (keep directory with .gitkeep)
+outputs/*.csv
+
+# Local env overrides
+.env.local
