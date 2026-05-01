@@ -28,3 +28,10 @@ outputs/*.csv
 
 # Local env overrides
 .env.local
+
+# Local LabChart / project data (not published with the repo)
+2.98 Data/
+*.cmbl
+
+# Local copies of model data next to the clone (optional)
+GoaltendModel/
