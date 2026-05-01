@@ -1,0 +1,17 @@
+# Large local workspace: only Python under syncing_video_data/ is intended for GitHub.
+
+# Ignore everything at repository root except this file and the syncing code folder.
+/*
+!.gitignore
+!syncing_video_data/
+
+# Under syncing_video_data: ignore all files, then allow only our Python sources.
+/syncing_video_data/**
+!/syncing_video_data/**/
+!/syncing_video_data/**/*.py
+
+# Never track virtualenvs (they contain thousands of third-party .py files).
+/syncing_video_data/venv/
+/syncing_video_data/.venv/
+
+**/.DS_Store
