@@ -10,7 +10,7 @@ This repo includes **SportsTech_NBA** work plus a **goaltend close-call** track:
 | `data/` | Segmented class folders, `Close Calls/`, and `close_calls_labels.csv` |
 | `notebooks/` | Exploratory analysis (e.g. spectrograms, PCA) |
 | `outputs/` | Generated prediction CSVs (gitignored except `.gitkeep`) |
-| `code.py`, `code2.py`, … | Other SportsTech_NBA scripts (from upstream `main`) |
+| `syncing_video_data/` | Video sync scripts (`code.py`, `code2.py`, `videoFrameNavigator.py`) |
 
 ## Setup
 
