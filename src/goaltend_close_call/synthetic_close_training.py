@@ -2,8 +2,9 @@
 Synthetic training examples for the close-call pipeline.
 
 All synthetic rows are generated **only** from labeled *Segmented* CSVs (same pool as
-``build_base_binary``). Real close-call files are never used here, so the 11 trials
-stay a true holdout for evaluation.
+``build_base_binary``). Real close-call CSVs are augmented only via segmented sources,
+not via held-out close-call evaluation clips (CV trains on a subset of labeled close
+calls per fold; synthetic rows do not copy raw close-call files).
 
 Augmentations (sensor 1 only when ``sensor_1_only``):
 - Random choice: standard peak-centered crop vs **jittered** crop (window center shifted

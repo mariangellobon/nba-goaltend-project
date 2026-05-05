@@ -21,18 +21,29 @@ import pandas as pd
 
 AXIS_ORDER = {"X": 0, "Y": 1, "Z": 2}
 COL_PAT = re.compile(r"Latest:\s*([XYZ])\s*Acceleration\s*(\d+)", re.I)
+# Some exports omit the sensor index on one axis, e.g. "Latest: Y Acceleration (m/s²)" for sensor 1.
+COL_PAT_BARE = re.compile(r"Latest:\s*([XYZ])\s*Acceleration\s*\(m/s", re.I)
 
 
 def _latest_accel_columns(df: pd.DataFrame) -> dict[tuple[int, int], str]:
     """Map (sensor_index_0based, axis_0based) -> column name."""
     mapping: dict[tuple[int, int], str] = {}
-    for c in df.columns:
-        m = COL_PAT.match(str(c).strip())
+    cols = [str(c).strip() for c in df.columns]
+    for c in cols:
+        m = COL_PAT.match(c)
         if not m:
             continue
         axis = AXIS_ORDER[m.group(1).upper()]
         sens = int(m.group(2)) - 1
         mapping[(sens, axis)] = c
+    for c in cols:
+        if COL_PAT.match(c):
+            continue
+        mb = COL_PAT_BARE.match(c)
+        if mb:
+            axis = AXIS_ORDER[mb.group(1).upper()]
+            if (0, axis) not in mapping:
+                mapping[(0, axis)] = c
     return mapping
 
 

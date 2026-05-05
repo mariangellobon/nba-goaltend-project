@@ -37,7 +37,11 @@ python -m goaltend_close_call.close_call_shape_model
 python -m goaltend_close_call.sensor_io   # smoke test: loads sample CSVs from data/
 ```
 
-Predictions: `outputs/close_calls_predictions.csv`, `outputs/close_calls_shape_predictions.csv`.
+Close-call evaluation (no leakage): **StratifiedKFold** on labeled close calls (stable legal/goaltend mix per fold); each fold trains on the remaining close calls and optionally all segmented data. Outputs:
+
+- `outputs/close_calls_oof_predictions.csv` (spectrogram model)
+- `outputs/close_calls_logistic_coefficients.csv` — when using **logistic** (default): ranked coefficients from a refit on all labeled close calls (for interpretation; OOF accuracy is still from `close_calls_oof_predictions.csv`)
+- `outputs/close_calls_shape_oof_predictions.csv` (shape features)
 
 ### Environment variables
 
@@ -45,6 +49,14 @@ Predictions: `outputs/close_calls_predictions.csv`, `outputs/close_calls_shape_p
 |----------|---------|---------|
 | `GOALTEND_DATA_DIR` | `<repo>/data` | Root containing `* - Segmented`, `Close Calls/`, `close_calls_labels.csv` |
 | `GOALTEND_OUTPUT_DIR` | `<repo>/outputs` | Where prediction CSVs are written |
+| `GOALTEND_CC_CV_SPLITS` | `5` | Stratified folds over usable close-call clips |
+| `GOALTEND_TRAIN_CLOSE_ONLY` | `1` | `1` = train each fold on **labeled close calls only** (no segmented Blocks/Goaltends data); `0` = previous behavior (all segmented + synthetic + close-call folds) |
+| `GOALTEND_MODEL` | `logistic` | `logistic` — **LogisticRegression** on standardized fusion features (default; interpretable coef). `hgb` — HistGradientBoosting. `rf` — RandomForest. |
+| `GOALTEND_USE_RF` | unset | Legacy: `1` is equivalent to `GOALTEND_MODEL=rf` |
+| `GOALTEND_LOGISTIC_C` | `1.0` | Inverse regularization strength for logistic (smaller = stronger ℓ2 shrinkage) |
+| `GOALTEND_WIN_SEC` | `1.0` | Peak-centered window length (seconds) |
+| `GOALTEND_NPERSEG` | `256` | STFT length for direction-change spectrograms |
+| `GOALTEND_HGB_MAX_ITER`, `GOALTEND_HGB_LEARNING_RATE`, `GOALTEND_HGB_MAX_DEPTH`, `GOALTEND_HGB_MIN_SAMPLES_LEAF`, `GOALTEND_HGB_L2` | defaults in `close_call_model.py` | Tune gradient boosting |
 
 ## Notebooks
 
