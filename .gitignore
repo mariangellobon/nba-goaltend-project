@@ -19,19 +19,40 @@ venv/
 # Jupyter
 .ipynb_checkpoints/
 
+# Executed notebooks (large cell outputs — keep repo source notebooks only)
+notebooks/**/*_executed.ipynb
+
 # OS / editor
 .DS_Store
 .mplconfig/
 
-# Generated outputs (keep directory with .gitkeep)
-outputs/*.csv
+# ── Dataset & generated artifacts (code only on GitHub) ─────────────────────
+# Raw CSVs / labels stay on your machine; clone `data/` structure locally.
+/data/**
+
+# Fallback: anywhere in repo
+*.joblib
+
+# Outputs, TabPFN run folders, dumped pipelines (everything under outputs except stub)
+outputs/**
+!outputs/.gitkeep
+
+# Torch / HF caches (often large)
+.cache/
+
+# LabChart recordings
+*.cmbl
+
+# Local LabChart tree name from older docs
+2.98 Data/
+
+# Local copies of sibling projects
+GoaltendModel/
+
+# Video inputs and rendered outputs (utilities folder)
+*.mov
+syncing_video_data/*.csv
+syncing_video_data/**/*.mov
 
 # Local env overrides
 .env.local
-
-# Local LabChart / project data (not published with the repo)
-2.98 Data/
-*.cmbl
-
-# Local copies of model data next to the clone (optional)
-GoaltendModel/

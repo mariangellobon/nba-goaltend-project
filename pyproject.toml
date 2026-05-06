@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "goaltend-close-call"
 version = "0.1.0"
-description = "Backboard accelerometer ingestion, spectrogram/shape features, and goaltend vs legal classification"
+description = "Backboard accelerometer ingestion: close-call models (spectrogram + shape features) and ROCKET + TabPFN on segmented traces"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -22,6 +22,17 @@ notebooks = [
     "seaborn>=0.13",
     "jupyter>=1.0",
     "ipykernel>=6.0",
+]
+
+# ROCKET time-series embeddings + Hugging Face TabPFN classifier (requires HF token — see README)
+tabpfn = [
+    "aeon>=0.7,<1",
+    "matplotlib>=3.8",
+    "tabpfn>=2.2",
+    "huggingface_hub>=0.20",
+    "torch>=2.0",
+    "tqdm>=4.66",
+    "joblib>=1.3",
 ]
 
 [tool.setuptools.packages.find]

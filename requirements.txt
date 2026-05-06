@@ -4,5 +4,5 @@ numpy
 matplotlib
 pandas
 
-# Goaltend close-call package (see pyproject.toml); includes notebook extras
+# Goaltend packages (close-call pipelines + Jupyter). TabPFN extras: pip install -e ".[tabpfn]"
 -e .[notebooks]
