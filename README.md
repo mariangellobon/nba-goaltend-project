@@ -18,7 +18,7 @@ Outputs (OOF CSVs, TabPFN run logs, dumped `fitted_tabpfn_pipeline.joblib`) go u
 | Path | Role |
 |------|------|
 | `src/goaltend_close_call/` | Packaging, IO, spectrogram/shape pipelines, sklearn classifiers |
-| `src/goaltend_tabpfn/` | `goaltend_classify.py`, `goaltend_holdout.py` (ROCKET + TabPFN) |
+| `src/goaltend_tabpfn/` | `goaltend_classify.py`, `goaltend_holdout.py`, `tabpfn_analysis.py` (ROCKET + TabPFN + error/confidence plots) |
 | `notebooks/` | Exploratory work (spectrograms, sensor plots) |
 | `syncing_video_data/` | Small utilities to overlay IMU traces on video and scrub frames |
 
@@ -83,6 +83,23 @@ python -m goaltend_tabpfn.goaltend_holdout
 
 # After training holdout module: unseen CSVs in data/test/
 python -m goaltend_tabpfn.goaltend_holdout --test
+```
+
+**Inspect wrong or confidence-bucketed calls** (re-runs LOO or holdout, writes `filtered.csv`, `summary.txt`, `figures/*.png` under `outputs/tabpfn_analysis/`):
+
+```bash
+# Every misclassification (LOO)
+python -m goaltend_tabpfn.tabpfn_analysis --split loo --view wrong
+
+# Wrong but model was >= 0.75 sure of its predicted class
+python -m goaltend_tabpfn.tabpfn_analysis --split loo --view confident_wrong --threshold 0.75
+
+# Ambiguous predictions (max class prob < 0.75); add --wrong-only for errors only
+python -m goaltend_tabpfn.tabpfn_analysis --split loo --view low_confidence --threshold 0.75
+python -m goaltend_tabpfn.tabpfn_analysis --split loo --view low_confidence --threshold 0.75 --wrong-only
+
+# Same views on the stratified holdout *test* split
+python -m goaltend_tabpfn.tabpfn_analysis --split holdout --view confident_wrong --random-state 42
 ```
 
 Use **CPU**, **CUDA**, or **Apple MPS** as supported by your installed Torch (scripts default toward MPS where available).

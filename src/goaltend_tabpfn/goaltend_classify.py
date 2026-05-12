@@ -388,6 +388,211 @@ def evaluate_goaltend(
     return result, paths, predictions
 
 
+def loo_predictions_table(
+    *,
+    data_dir: Path = DATA_DIR,
+    n_groups: int = N_GROUPS,
+    n_kernels: int = N_KERNELS,
+    device: str = "auto",
+) -> pd.DataFrame:
+    """Leave-one-out ROCKET + TabPFN: one row per sample with full class probabilities.
+
+    Columns include ``y_true``, ``y_pred``, ``correct``, ``p_legal``, ``p_goaltend``,
+    and ``p_predicted`` (model confidence in the predicted class, i.e. max softmax).
+    """
+    from aeon.transformations.collection.convolution_based import Rocket
+    from tabpfn import TabPFNClassifier
+
+    raw_samples, y, paths = load_goaltend_dataset(data_dir)
+    unique_classes = np.unique(y)
+    if len(unique_classes) < 2:
+        raise ValueError(
+            f"Need at least 2 classes to classify, but only found: {unique_classes}."
+        )
+
+    loo = LeaveOneOut()
+    folds = list(loo.split(raw_samples))
+    N = len(folds)
+    pos_label = "goaltend"
+    rows: list[dict] = []
+
+    for i, (tr_idx, te_idx) in enumerate(tqdm(folds, desc="LOO (analysis)")):
+        tr_raw = [raw_samples[j] for j in tr_idx]
+        te_raw = [raw_samples[j] for j in te_idx]
+        y_tr = y[tr_idx]
+        y_te = y[te_idx]
+
+        T_te = te_raw[0].shape[1]
+        X_tr = zscore_normalize(pad_to(tr_raw, T_te))
+        X_te = zscore_normalize(np.array([te_raw[0]], dtype=np.float32))
+
+        all_probas: list[np.ndarray] = []
+        classes_ = None
+
+        for g in range(n_groups):
+            seed = i * n_groups + g
+            rocket = Rocket(n_kernels=n_kernels, random_state=seed, n_jobs=-1)
+            rocket.fit(X_tr)
+            X_tr_feat = rocket.transform(X_tr)
+            X_te_feat = rocket.transform(X_te)
+            del rocket
+
+            clf = TabPFNClassifier(
+                n_estimators=8,
+                device=device,
+                random_state=seed,
+                ignore_pretraining_limits=True,
+            )
+            clf.fit(X_tr_feat, y_tr)
+            probas = clf.predict_proba(X_te_feat)
+            if classes_ is None:
+                classes_ = clf.classes_
+            all_probas.append(probas)
+            del clf, X_tr_feat, X_te_feat, probas
+
+        avg_probas = np.mean(all_probas, axis=0)[0]
+        pred_idx = int(np.argmax(avg_probas))
+        y_pred = str(classes_[pred_idx])
+        p_predicted = float(avg_probas[pred_idx])
+        y_true = y_te[0]
+        hit = y_pred == y_true
+
+        p_goaltend = float(avg_probas[list(classes_).index(pos_label)]) if pos_label in classes_ else 0.0
+        p_legal = float(avg_probas[list(classes_).index("legal")]) if "legal" in classes_ else 0.0
+
+        rows.append(
+            {
+                "sample_idx": i,
+                "dataset_idx": int(te_idx[0]),
+                "path": str(paths[te_idx[0]]),
+                "filename": paths[te_idx[0]].name,
+                "y_true": y_true,
+                "y_pred": y_pred,
+                "correct": hit,
+                "p_predicted": p_predicted,
+                "p_goaltend": p_goaltend,
+                "p_legal": p_legal,
+            }
+        )
+
+        del all_probas, avg_probas, X_tr, X_te, y_tr, y_te, classes_
+        gc.collect()
+        try:
+            import torch
+
+            torch.cuda.empty_cache()
+        except Exception:
+            pass
+
+    return pd.DataFrame(rows)
+
+
+def holdout_predictions_table(
+    *,
+    data_dir: Path = DATA_DIR,
+    n_groups: int = N_GROUPS,
+    n_kernels: int = N_KERNELS,
+    test_size: float = 0.2,
+    random_state: int = 42,
+    device: str = "auto",
+) -> tuple[pd.DataFrame, dict]:
+    """Stratified holdout: one row per **test** sample with probabilities and paths."""
+    from aeon.transformations.collection.convolution_based import Rocket
+    from sklearn.model_selection import train_test_split
+    from tabpfn import TabPFNClassifier
+
+    raw_samples, y, paths = load_goaltend_dataset(data_dir)
+    unique_classes = np.unique(y)
+    if len(unique_classes) < 2:
+        raise ValueError(
+            f"Need at least 2 classes to classify, but only found: {unique_classes}."
+        )
+
+    indices = np.arange(len(raw_samples))
+    tr_idx, te_idx = train_test_split(
+        indices,
+        test_size=test_size,
+        stratify=y,
+        random_state=random_state,
+    )
+
+    tr_raw = [raw_samples[i] for i in tr_idx]
+    te_raw = [raw_samples[i] for i in te_idx]
+    y_tr = y[tr_idx]
+    y_te = y[te_idx]
+
+    T_tr = max(s.shape[1] for s in tr_raw)
+    X_tr = pad_to(tr_raw, T_tr)
+    X_te = pad_to(te_raw, T_tr)
+
+    all_probas: list[np.ndarray] = []
+    classes_ = None
+
+    for g in range(n_groups):
+        seed = g
+        rocket = Rocket(n_kernels=n_kernels, random_state=seed, n_jobs=-1)
+        rocket.fit(X_tr)
+        X_tr_feat = rocket.transform(X_tr)
+        X_te_feat = rocket.transform(X_te)
+        del rocket
+
+        clf = TabPFNClassifier(
+            n_estimators=8,
+            device=device,
+            random_state=seed,
+            ignore_pretraining_limits=True,
+        )
+        clf.fit(X_tr_feat, y_tr)
+        probas = clf.predict_proba(X_te_feat)
+        if classes_ is None:
+            classes_ = clf.classes_
+        all_probas.append(probas)
+        del clf, X_tr_feat, X_te_feat, probas
+        gc.collect()
+        try:
+            import torch
+
+            torch.cuda.empty_cache()
+        except Exception:
+            pass
+
+    avg_probas = np.mean(all_probas, axis=0)
+    y_pred = classes_[np.argmax(avg_probas, axis=1)]
+    pos_label = "goaltend"
+    pos_idx = list(classes_).index(pos_label) if pos_label in classes_ else 0
+    leg_idx = list(classes_).index("legal") if "legal" in classes_ else None
+
+    rows = []
+    for j in range(len(te_idx)):
+        gidx = int(te_idx[j])
+        av = avg_probas[j]
+        pred_idx = int(np.argmax(av))
+        rows.append(
+            {
+                "test_fold_idx": j,
+                "dataset_idx": gidx,
+                "path": str(paths[gidx]),
+                "filename": paths[gidx].name,
+                "y_true": y_te[j],
+                "y_pred": str(y_pred[j]),
+                "correct": bool(y_pred[j] == y_te[j]),
+                "p_predicted": float(av[pred_idx]),
+                "p_goaltend": float(av[pos_idx]),
+                "p_legal": float(av[leg_idx]) if leg_idx is not None else float("nan"),
+            }
+        )
+
+    result = {
+        "method": f"holdout_{int((1 - test_size) * 100)}/{int(test_size * 100)}",
+        "random_state": random_state,
+        "n_train": len(tr_idx),
+        "n_test": len(te_idx),
+        "n_groups": n_groups,
+        "n_kernels": n_kernels,
+    }
+    return pd.DataFrame(rows), result
+
+
 # ── 80/20 holdout validation ─────────────────────────────────────────────────
 
 def evaluate_goaltend_holdout(
